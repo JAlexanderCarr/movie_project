@@ -1,0 +1,24 @@
+---
+title: "data_test"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Testing the data sets
+
+```{r data}
+movies <- read.csv("data/movies_metadata.csv")
+test <- data.frame(as.numeric(movies$budget), movies$revenue)
+test <- setNames(test, c("budget", "revenue"))
+test[test==0] <- NA
+test.data <- na.omit(test)
+```
+
+```{r}
+test.lm <- lm(budget ~ revenue, data = test.data)
+summary(test.lm)
+cor(test.data)
+```
