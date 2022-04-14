@@ -1,35 +1,38 @@
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
 
 movies <- read.csv("data/movies_metadata.csv", sep = ",", header = T)
+inflation <- read.csv("data/inflation.csv", sep = ",", header = T)
 
-# movies[,"profit"] <-  as.numeric(movies[,"revenue"]) - as.numeric(movies[,"budget"])
-# #inflation rate (as estimated by tradingeconomics.com) is ~3.26% over the last 100 years
-# movies[,"inflation_profit"] <-  as.numeric(movies[,"revenue"]) - as.numeric(movies[,"budget"]) * 0.0326
-# movies[,"inflation_revenue"] <- as.numeric(movies[,]$revenue) * 0.0326
-# movies[,"inflation_budget"] <- as.numeric(movies[,]$budget) * 0.0326
 for (i in 1:3){
-  year <- as.POSIXct(movies[i,"release_date"], format = "%Y-%m-%d")
-  year <- as.numeric(format(year, format="%m"))
+  paste(print(movies[i,"release_date"]))
+  year <- as.POSIXct(movies[i,"release_date"], format = "%m/%d/%Y")
+  paste(print(year))
+  year <- as.numeric(format(year, format="%Y"))
+  paste(print(year))
   #divides movies 2000s and 1900s by adding the correct year amount
-  if(0 <= year || year <= 22){
+  if(0 <= year){
     year <- year + 2000
-  }else{
+  }
+  else if(year <= 22){
+    year <- year + 2000
+  }
+  else{
     year <- year + 1900
   }
-  #calculating total inflation to be used by multiplying average year inflation rate * (difference in 2022 and year movie was released)
-   #inflation rate (as estimated by tradingeconomics.com) is ~3.26% over the last 100 years
-  inflation <- ((2022-year)* 0.0326)
+  #finding the index we will be using to access the inflation/csv file
+  inflation_index <- year - 1956 + 1
+  inflation_rate <- inflation[1,inflation_index]
   #extracing profit/budget/revenue 
   revenue <- as.numeric(movies[i,]$revenue)
   budget <- as.numeric(movies[i,]$budget)
   profit<- revenue - budget
   #putting new values into the correct column
   movies[i,"profit"] <- profit
-  movies[i,"inflation_profit"] <- profit + profit * inflation
-  movies[i,"inflation_revenue"] <- revenue + revenue * inflation
-  movies[i,"inflation_budget"] <-  budget + budget * inflation
-
+  movies[i,"inflation_profit"] <- profit * inflation
+  movies[i,"inflation_revenue"] <- revenue * inflation
+  movies[i,"inflation_budget"] <- budget * inflation
+  #figuring out the relative profit that a company makes as a calculation
+  movies[i,"profit_percentage"] <- (profit * inflation) / (budget * inflation)
 }
 print(paste0("The total profit for movies: $", movies[1, "profit"]))
 print(paste0("The total profit for movies, adjusted for inflation was: $", movies[1, "inflation_profit"]))
