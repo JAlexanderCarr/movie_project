@@ -18,9 +18,13 @@ for (i in 1:3){
   }
   #finding the index we will be using to access the inflation/csv file
   inflation_index <- year - 1957 + 9
+<<<<<<< HEAD
   #changing inflation rate to be a decimal, not a percent
   inflation_rate <- 1+ inflation[1,inflation_index] / 100
   paste(print(inflation_rate))
+=======
+  inflation_rate <- 1 + inflation[1,inflation_index] / 100
+>>>>>>> 0159e7bfcf870c14996da323904651fced4ebbc4
   #extracing profit/budget/revenue 
   revenue <- as.numeric(movies[i,]$revenue)
   budget <- as.numeric(movies[i,]$budget)
@@ -35,4 +39,33 @@ for (i in 1:3){
 }
 print(paste0("The total profit for movies: $", movies[1, "profit"]))
 print(paste0("The total profit for movies, adjusted for inflation was: $", movies[1, "inflation_profit"]))
+
+## Adding binary values for genre data for each movie
+
+library(stringr)
+searchGenres <- c("Comedy", "Science Space Fiction", "Horror", "Romance", "Action", "Thriller", "Drama", "Mystery", "Crime", "Animation", "Adventure", "Fantasy")
+movies["Comedy"] <- c(0)
+movies["Science Space Fiction"] <- c(0)
+movies["Horror"] <- c(0)
+movies["Romance"] <- c(0)
+movies["Action"] <- c(0)
+movies["Thriller"] <- c(0)
+movies["Drama"] <- c(0)
+movies["Mystery"] <- c(0)
+movies["Crime"] <- c(0)
+movies["Animation"] <- c(0)
+movies["Adventure"] <- c(0)
+movies["Fantasy"] <- c(0)
+
+for (i in searchGenres) {
+  for (j in movies$genres) {
+    if (str_detect(j, i)) {
+      movies[i][match(j, movies$genres),] <- 1
+    }
+    else {
+      movies[i][match(j, movies$genres),] <- 0
+    }
+  }
+}
+
 ```
