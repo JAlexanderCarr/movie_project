@@ -18,13 +18,10 @@ for (i in 1:3){
   }
   #finding the index we will be using to access the inflation/csv file
   inflation_index <- year - 1957 + 9
-<<<<<<< HEAD
+
   #changing inflation rate to be a decimal, not a percent
   inflation_rate <- 1+ inflation[1,inflation_index] / 100
   paste(print(inflation_rate))
-=======
-  inflation_rate <- 1 + inflation[1,inflation_index] / 100
->>>>>>> 0159e7bfcf870c14996da323904651fced4ebbc4
   #extracing profit/budget/revenue 
   revenue <- as.numeric(movies[i,]$revenue)
   budget <- as.numeric(movies[i,]$budget)
