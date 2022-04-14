@@ -1,8 +1,21 @@
 ```{r setup, include=FALSE}
+library(dplyr)
 
-movies <- read.csv("data/movies_metadata.csv", sep = ",", header = T)
+movies_orig <- read.csv("data/movies_metadata.csv", sep = ",", header = T)
 inflation <- read.csv("data/inflation.csv", sep = ",", header = T)
 
+movies_new <- data.frame(movies_orig$original_title,movies_orig$belongs_to_collection,as.numeric(movies_orig$budget), as.numeric(movies_orig$revenue), as.numeric(movies_orig$popularity), movies_orig$original_language, movies_orig$runtime, movies_orig$release_date, movies_orig$genres)
+
+movies_new <- setNames(movies_new, c("original_title","belongs_to_collection","budget","revenue","popularity","original_language","runtime","release_date","genres"))
+
+movies_intermediate <- filter(movies_new, revenue > 0 | budget > 0)
+movies <- filter(movies_intermediate, as.Date(release_date, format="%m/%d/%Y") >= "01/01/1950")
+
+str(movies)
+```
+
+
+```{r setup, include=FALSE}
 for (i in 1:3){
   paste(print(movies[i,"release_date"]))
   year <- as.POSIXct(movies[i,"release_date"], format = "%m/%d/%Y")
@@ -22,7 +35,7 @@ for (i in 1:3){
   #changing inflation rate to be a decimal, not a percent
   inflation_rate <- 1+ inflation[1,inflation_index] / 100
   paste(print(inflation_rate))
-  #extracing profit/budget/revenue 
+  #extracting profit/budget/revenue 
   revenue <- as.numeric(movies[i,]$revenue)
   budget <- as.numeric(movies[i,]$budget)
   profit<- revenue - budget
@@ -36,6 +49,11 @@ for (i in 1:3){
 }
 print(paste0("The total profit for movies: $", movies[1, "profit"]))
 print(paste0("The total profit for movies, adjusted for inflation was: $", movies[1, "inflation_profit"]))
+
+movies$isSuccess <- ifelse(movies$profit_percentage > 3, 1, 0)
+
+movies$isEN <- ifelse(movies$original_language == "en", 1, 0)
+movies$isCollection <- ifelse(movies$belongs_to_collection == "", 0, 1)
 
 ## Adding binary values for genre data for each movie
 
@@ -65,4 +83,5 @@ for (i in searchGenres) {
   }
 }
 
+head(movies)
 ```
