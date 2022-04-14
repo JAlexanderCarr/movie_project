@@ -1,1 +1,65 @@
+---
+title: "data_test_naive_bayes"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Testing the data sets
+
+```{r data}
+movies <- read.csv("data/movies_metadata.csv")
+refined_data <- data.frame(movies$original_title,movies$belongs_to_collection,as.numeric(movies$budget), as.numeric(movies$revenue), as.numeric(movies$popularity), movies$original_language, movies$runtime, movies$release_date)
+refined_data <- setNames(refined_data, c("original_title","collection","budget","revenue","popularity","original_language","runtime","release_date"))
+refined_data$isEN <- ifelse(movies$original_language == "en", 1, 0)
+refined_data$isCollection <- ifelse(movies$belongs_to_collection == "", 0, 1)
+```
+
+```{r}
+#revenue
+library(e1071)
+set.seed(101)
+profit_data <- refined_data
+#Randomize the data
+data_randomized <- profit_data[sample(nrow(profit_data)),]
+
+#Create 10 folds
+folds <- cut(seq(1,nrow(data_randomized)),breaks=10,labels=FALSE)
+
+total_precision <- 0
+total_recall <- 0
+total_accuracy <- 0
+#Perform 10 fold cross validation
+for(i in 1:10){
+    testIndexes <- which(folds==i,arr.ind=TRUE)
+    testData <- data_randomized[testIndexes, ]
+    trainData <- data_randomized[-testIndexes, ]
+    classifier <- naiveBayes(revenue ~ ., data = trainData)
+    y_pred <- predict(classifier, newdata = testData)
+    matrix <- table(testData$revenue, y_pred)
+    precision <- matrix[1]/ sum(matrix[1], matrix[3])
+    recall <- matrix[1]/ sum(matrix[1], matrix[2])
+    accuracy <- sum(matrix[1], matrix[4]) / sum(matrix) 
+    total_precision <- total_precision + precision
+    total_recall <- total_recall + recall
+    total_accuracy <- total_accuracy + accuracy
+}
+print("Revenue Prediction")
+avg_precision = total_precision / 10
+cat("Average Precision",avg_precision,"\n")
+avg_recall = total_recall / 10
+cat("Average Recall",avg_recall,"\n")
+avg_accuracy = total_accuracy / 10
+cat("Average Accuracy",avg_accuracy,"\n")
+```
+```{r}
+#popularity
+```
+
+```{r}
+#
+
+```
 
