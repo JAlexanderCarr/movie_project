@@ -33,6 +33,8 @@ for (i in 1:3){
   movies[i,"inflation_budget"] <- budget * inflation
   #figuring out the relative profit that a company makes as a calculation
   movies[i,"profit_percentage"] <- (profit * inflation) / (budget * inflation)
+  movies$isEN <- ifelse(movies$original_language == "en", 1, 0)
+  movies$isCollection <- ifelse(movies$belongs_to_collection == "", 0, 1)
 }
 print(paste0("The total profit for movies: $", movies[1, "profit"]))
 print(paste0("The total profit for movies, adjusted for inflation was: $", movies[1, "inflation_profit"]))
