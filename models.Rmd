@@ -1,26 +1,108 @@
 ---
-title: "models"
+title: "Models"
 author: "Rachael Bucci, Alexander Carr, Grant Hershman, Luca Milletti, Emma Mirabelli"
 date: "5/4/2022"
 output: html_document
 ---
 
-## R Markdown
-
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r cars}
-summary(cars)
+```{r}
+# Importing the necessary packages
+library(caret)
+library(e1071)
 ```
 
-## Including Plots
+## Data Cleaning
 
-You can also embed plots, for example:
+```{r}
+# Importing the two datasets
+movies_orig <- read.csv("data/movies_metadata.csv", sep = ",", header = T)
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+# Extracting the columns for analysis
+movies_new <- data.frame(movies_orig$original_title,movies_orig$belongs_to_collection,as.numeric(movies_orig$budget), as.numeric(movies_orig$revenue), as.numeric(movies_orig$popularity), movies_orig$original_language, movies_orig$runtime, as.Date(chron(movies_orig$release_date)), movies_orig$genres)
+movies_new <- setNames(movies_new, c("original_title","belongs_to_collection","budget","revenue","popularity","original_language","runtime","release_date","genres"))
+
+# Cleaning the data
+movies_intermediate <- na.omit(movies_new)
+movies_intermediate <- filter(movies_intermediate, revenue > 0 & budget > 0)
+movies <- filter(movies_intermediate, release_date >= as.Date("1950-01-01", format = "%Y-%m-%d"))
+movies[,"profit_percentage"] <- movies$revenue / movies$budget
+
+# Creating dummy variables for success, language, and series
+movies$isSuccess <- ifelse(movies$profit_percentage > 3, 1, 0)
+movies$isEN <- ifelse(movies$original_language == "en", 1, 0)
+movies$isCollection <- ifelse(movies$belongs_to_collection == "", 0, 1)
+
+# Creating dummy variables for genre
+searchGenres <- c("Comedy", "Science Fiction", "Horror", "Romance", "Action", "Thriller", "Drama", "Mystery", "Crime", "Animation", "Adventure", "Fantasy")
+movies["Comedy"] <- c(0)
+movies["Science Fiction"] <- c(0)
+movies["Horror"] <- c(0)
+movies["Romance"] <- c(0)
+movies["Action"] <- c(0)
+movies["Thriller"] <- c(0)
+movies["Drama"] <- c(0)
+movies["Mystery"] <- c(0)
+movies["Crime"] <- c(0)
+movies["Animation"] <- c(0)
+movies["Adventure"] <- c(0)
+movies["Fantasy"] <- c(0)
+for (i in searchGenres) {
+  for (j in movies$genres) {
+    if (str_detect(j, i)) {
+      movies[i][match(j, movies$genres),] <- 1
+    }
+    else {
+      movies[i][match(j, movies$genres),] <- 0
+    }
+  }
+}
+
+# Setting up the training and validation data
+set.seed(13)
+train <- createDataPartition(y = movies$isSuccess, p = .90, list = FALSE)
+movies.train <- movies[train,]
+movies.test <- movies[-train,]
+movies.ctrl <- trainControl(method = "cv", number = 10)
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+## Logistic Regression
+
+```{r}
+# 
+movies.lr <- train(isSuccess ~ budget + revenue + popularity + runtime + isEN + isCollection + Comedy + `Science Fiction` + Horror + Romance + Action + Thriller + Drama + Mystery + Crime + Animation + Adventure + Fantasy, data = movies.train, method = "glm", trControl = movies.ctrl)
+movies.lr.predict <- predict(movies.lr, newdata = movies.test)
+movies.lr.predict.bin <- ifelse(movies.lr.predict > 0.5, 1, 0)
+confusionMatrix(as.factor(movies.lr.predict.bin), reference = as.factor(movies.test$isSuccess))
+```
+
+## k-Nearest Neighbor
+
+```{r}
+# 
+movies.knn <- train(isSuccess ~ budget + revenue + popularity + runtime + isEN + isCollection + Comedy + `Science Fiction` + Horror + Romance + Action + Thriller + Drama + Mystery + Crime + Animation + Adventure + Fantasy, data = movies.train, method = "knn", trControl = movies.ctrl)
+movies.knn.predict <- predict(movies.knn, newdata = movies.test)
+movies.knn.predict.bin <- ifelse(movies.knn.predict > 0.5, 1, 0)
+confusionMatrix(as.factor(movies.knn.predict.bin), reference = as.factor(movies.test$isSuccess))
+```
+
+## k-Means
+
+```{r}
+# 
+movies.km <- train(isSuccess ~ budget + revenue + popularity + runtime + isEN + isCollection + Comedy + `Science Fiction` + Horror + Romance + Action + Thriller + Drama + Mystery + Crime + Animation + Adventure + Fantasy, data = movies.train, method = "km", trControl = movies.ctrl)
+movies.km.predict <- predict(movies.km, newdata = movies.test)
+movies.km.predict.bin <- ifelse(movies.km.predict > 0.5, 1, 0)
+confusionMatrix(as.factor(movies.km.predict.bin), reference = as.factor(movies.test$isSuccess))
+```
+
+## Naive Bayes
+
+```{r}
+# 
+movies.nb.x <- movies.train[c('budget', 'revenue', 'popularity', 'runtime', 'isEN', 'isCollection', 'Comedy', 'Science Fiction', 'Horror', 'Romance', 'Action', 'Thriller', 'Drama', 'Mystery', 'Crime', 'Animation', 'Adventure', 'Fantasy')]
+movies.nb.y <- as.factor(movies.train$isSuccess)
+movies.nb <- train(movies.nb.x, movies.nb.y, method = "nb", trControl = movies.ctrl)
+movies.nb.predict <- predict(movies.nb, newdata = movies.test)
+movies.nb.predict.bin <- ifelse(movies.nb.predict > 0.5, 1, 0)
+confusionMatrix(as.factor(movies.nb.predict.bin), reference = as.factor(movies.test$isSuccess))
+```
