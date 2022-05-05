@@ -5,15 +5,19 @@ date: "5/4/2022"
 output: html_document
 ---
 
-```{r}
+```{r, warning = FALSE, echo = FALSE, message = FALSE}
 # Importing the necessary packages
+library(chron)
 library(caret)
 library(e1071)
+library(dplyr)
+library(stringr)
+library(ROCR)
 ```
 
 ## Data Cleaning
 
-```{r}
+```{r, warning = FALSE}
 # Importing the two datasets
 movies_orig <- read.csv("data/movies_metadata.csv", sep = ",", header = T)
 
@@ -23,8 +27,8 @@ movies_new <- setNames(movies_new, c("original_title","belongs_to_collection","b
 
 # Cleaning the data
 movies_intermediate <- na.omit(movies_new)
-movies_intermediate <- filter(movies_intermediate, revenue > 0 & budget > 0)
-movies <- filter(movies_intermediate, release_date >= as.Date("1950-01-01", format = "%Y-%m-%d"))
+movies_intermediate <- filter(movies_intermediate, movies_intermediate$revenue > 0 & movies_intermediate$budget > 0)
+movies <- filter(movies_intermediate, movies_intermediate$release_date >= as.Date("1950-01-01", format = "%Y-%m-%d"))
 movies[,"profit_percentage"] <- movies$revenue / movies$budget
 
 # Creating dummy variables for success, language, and series
@@ -67,8 +71,8 @@ movies.ctrl <- trainControl(method = "cv", number = 10)
 
 ## Logistic Regression
 
-```{r}
-# 
+```{r, warning = FALSE}
+# Training and testing a logistic regression model on the movie dataset
 movies.lr <- train(isSuccess ~ budget + revenue + popularity + runtime + isEN + isCollection + Comedy + `Science Fiction` + Horror + Romance + Action + Thriller + Drama + Mystery + Crime + Animation + Adventure + Fantasy, data = movies.train, method = "glm", trControl = movies.ctrl)
 movies.lr.predict <- predict(movies.lr, newdata = movies.test)
 movies.lr.predict.bin <- ifelse(movies.lr.predict > 0.5, 1, 0)
@@ -77,32 +81,37 @@ confusionMatrix(as.factor(movies.lr.predict.bin), reference = as.factor(movies.t
 
 ## k-Nearest Neighbor
 
-```{r}
-# 
+```{r, warning = FALSE}
+# Training and testing a k-nearest neighbor model on the movie dataset
 movies.knn <- train(isSuccess ~ budget + revenue + popularity + runtime + isEN + isCollection + Comedy + `Science Fiction` + Horror + Romance + Action + Thriller + Drama + Mystery + Crime + Animation + Adventure + Fantasy, data = movies.train, method = "knn", trControl = movies.ctrl)
 movies.knn.predict <- predict(movies.knn, newdata = movies.test)
 movies.knn.predict.bin <- ifelse(movies.knn.predict > 0.5, 1, 0)
 confusionMatrix(as.factor(movies.knn.predict.bin), reference = as.factor(movies.test$isSuccess))
 ```
 
-## k-Means
-
-```{r}
-# 
-movies.km <- train(isSuccess ~ budget + revenue + popularity + runtime + isEN + isCollection + Comedy + `Science Fiction` + Horror + Romance + Action + Thriller + Drama + Mystery + Crime + Animation + Adventure + Fantasy, data = movies.train, method = "km", trControl = movies.ctrl)
-movies.km.predict <- predict(movies.km, newdata = movies.test)
-movies.km.predict.bin <- ifelse(movies.km.predict > 0.5, 1, 0)
-confusionMatrix(as.factor(movies.km.predict.bin), reference = as.factor(movies.test$isSuccess))
-```
-
 ## Naive Bayes
 
 ```{r}
-# 
+# Training and testing a naive bayes model on the movie dataset
 movies.nb.x <- movies.train[c('budget', 'revenue', 'popularity', 'runtime', 'isEN', 'isCollection', 'Comedy', 'Science Fiction', 'Horror', 'Romance', 'Action', 'Thriller', 'Drama', 'Mystery', 'Crime', 'Animation', 'Adventure', 'Fantasy')]
 movies.nb.y <- as.factor(movies.train$isSuccess)
 movies.nb <- train(movies.nb.x, movies.nb.y, method = "nb", trControl = movies.ctrl)
 movies.nb.predict <- predict(movies.nb, newdata = movies.test)
 movies.nb.predict.bin <- ifelse(movies.nb.predict > 0.5, 1, 0)
 confusionMatrix(as.factor(movies.nb.predict.bin), reference = as.factor(movies.test$isSuccess))
+```
+
+## ROC Plot
+
+```{r}
+# Generating the values needed for the ROC curves
+movies.lr.rocrpred <- prediction(movies.lr.predict, movies.test$isSuccess)
+movies.lr.rocrperf <- performance(movies.lr.rocrpred, "tpr", "fpr")
+movies.knn.rocrpred <- prediction(movies.knn.predict, movies.test$isSuccess)
+movies.knn.rocrperf <- performance(movies.knn.rocrpred, "tpr", "fpr")
+
+# Plotting the ROC curves
+plot(movies.lr.rocrperf, col = 3, text.adj = c(-0.2, 1.7), main = "ROC Curve")
+plot(movies.knn.rocrperf, col = 4, add = TRUE)
+legend("bottomright", inset = 0.05, legend = c("Logistic Regression", "k-Nearest Neighbor"), lty = c(1, 1), col = c(3, 4))
 ```
