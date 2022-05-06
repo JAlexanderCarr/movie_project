@@ -74,7 +74,7 @@ movies.ctrl <- trainControl(method = "cv", number = 10)
 
 ```{r, warning = FALSE}
 # Training and testing a logistic regression model on the movie dataset
-movies.lr <- train(isSuccess ~ budget + revenue + popularity + runtime + isEN + isCollection + Comedy + `Science Fiction` + Horror + Romance + Action + Thriller + Drama + Mystery + Crime + Animation + Adventure + Fantasy, data = movies.train, method = "glm", trControl = movies.ctrl)
+movies.lr <- train(isSuccess ~ budget + popularity + runtime + isEN + isCollection + Comedy + `Science Fiction` + Horror + Romance + Action + Thriller + Drama + Mystery + Crime + Animation + Adventure + Fantasy, data = movies.train, method = "glm", trControl = movies.ctrl)
 movies.lr.predict <- predict(movies.lr, newdata = movies.test)
 movies.lr.predict.bin <- ifelse(movies.lr.predict > 0.5, 1, 0)
 confusionMatrix(as.factor(movies.lr.predict.bin), reference = as.factor(movies.test$isSuccess))
@@ -84,73 +84,67 @@ confusionMatrix(as.factor(movies.lr.predict.bin), reference = as.factor(movies.t
 
 ```{r, warning = FALSE}
 # Training and testing a k-nearest neighbor model on the movie dataset
-movies.knn <- train(isSuccess ~ budget + revenue + popularity + runtime + isEN + isCollection + Comedy + `Science Fiction` + Horror + Romance + Action + Thriller + Drama + Mystery + Crime + Animation + Adventure + Fantasy, data = movies.train, method = "knn", trControl = movies.ctrl)
+movies.knn <- train(isSuccess ~ budget + popularity + runtime + isEN + isCollection + Comedy + `Science Fiction` + Horror + Romance + Action + Thriller + Drama + Mystery + Crime + Animation + Adventure + Fantasy, data = movies.train, method = "knn", trControl = movies.ctrl)
 movies.knn.predict <- predict(movies.knn, newdata = movies.test)
 movies.knn.predict.bin <- ifelse(movies.knn.predict > 0.5, 1, 0)
 confusionMatrix(as.factor(movies.knn.predict.bin), reference = as.factor(movies.test$isSuccess))
 ```
-## Naive Bayes
 
-```{r}
-#Randomize the data
-data_randomized <- movies[sample(nrow(movies)),]
+## Support Vector Machine
 
-#Create 10 folds
-folds <- cut(seq(1,nrow(data_randomized)),breaks=10,labels=FALSE)
+```{r, warning = FALSE}
+# Training and testing a support vector machine model on the movie dataset
+movies.svm <- train(isSuccess ~ budget + popularity + runtime + isEN + isCollection + Comedy + `Science Fiction` + Horror + Romance + Action + Thriller + Drama + Mystery + Crime + Animation + Adventure + Fantasy, data = movies.train, method = "svmLinear", trControl = movies.ctrl)
+movies.svm.predict <- predict(movies.svm, newdata = movies.test)
+movies.svm.predict.bin <- ifelse(movies.svm.predict > 0.5, 1, 0)
+confusionMatrix(as.factor(movies.svm.predict.bin), reference = as.factor(movies.test$isSuccess))
+```
 
-movies.nb.predict <- 0
-best_accuracy <- 0
+## Random Forest
 
-#Perform 10 fold cross validation
-for(i in 1:10){
-    testIndexes <- which(folds==i,arr.ind=TRUE)
-    testData <- data_randomized[testIndexes, ]
-    trainData <- data_randomized[-testIndexes, ]
-    classifier <- naiveBayes(isSuccess ~ budget + revenue + popularity + runtime + isEN + isCollection + Comedy + `Science Fiction` + Horror + Romance + Action + Thriller + Drama + Mystery + Crime + Animation + Adventure + Fantasy, data = trainData)
-    y_pred <- predict(classifier, newdata = testData)
-    matrix <- table(testData$isSuccess, y_pred)
-    precision <- matrix[1]/ sum(matrix[1], matrix[3])
-    recall <- matrix[1]/ sum(matrix[1], matrix[2])
-    accuracy <- sum(matrix[1], matrix[4]) / sum(matrix)
-    if(accuracy > best_accuracy){
-      best_accuracy <- accuracy
-      best_precision <- precision
-      best_recall <- recall
-      best_matrix <- matrix
-      movies.nb.predict <- y_pred
-    }
-}
-print(best_matrix)
-print(best_accuracy)
-print(best_recall)
-print(best_precision)
+```{r, warning = FALSE}
+# Training and testing a random forest model on the movie dataset
+movies.rf <- train(isSuccess ~ budget + popularity + runtime + isEN + isCollection + Comedy + `Science Fiction` + Horror + Romance + Action + Thriller + Drama + Mystery + Crime + Animation + Adventure + Fantasy, data = movies.train, method = "rf", trControl = movies.ctrl)
+movies.rf.predict <- predict(movies.rf, newdata = movies.test)
+movies.rf.predict.bin <- ifelse(movies.rf.predict > 0.5, 1, 0)
+confusionMatrix(as.factor(movies.rf.predict.bin), reference = as.factor(movies.test$isSuccess))
 ```
 
 ## ROC Plot
 
-```{r}
+```{r, warning = FALSE}
 # Generating the values needed for the ROC curves
 movies.lr.rocrpred <- prediction(movies.lr.predict, movies.test$isSuccess)
 movies.lr.rocrperf <- performance(movies.lr.rocrpred, "tpr", "fpr")
 movies.knn.rocrpred <- prediction(movies.knn.predict, movies.test$isSuccess)
 movies.knn.rocrperf <- performance(movies.knn.rocrpred, "tpr", "fpr")
-movies.nb.rocrpred <- prediction(as.numeric(movies.nb.predict), movies.test$isSuccess)
-movies.nb.rocrperf <- performance(movies.nb.rocrpred, "tpr", "fpr")
+movies.svm.rocrpred <- prediction(as.numeric(movies.svm.predict), movies.test$isSuccess)
+movies.svm.rocrperf <- performance(movies.svm.rocrpred, "tpr", "fpr")
+movies.rf.rocrpred <- prediction(as.numeric(movies.rf.predict), movies.test$isSuccess)
+movies.rf.rocrperf <- performance(movies.rf.rocrpred, "tpr", "fpr")
 
 # Plotting the ROC curves
 plot(movies.lr.rocrperf, col = 3, text.adj = c(-0.2, 1.7), main = "ROC Curve")
 plot(movies.knn.rocrperf, col = 4, add = TRUE)
-plot(movies.nb.rocrperf, col = 5, add = TRUE)
-legend("bottomright", inset = 0.05, legend = c("Logistic Regression", "k-Nearest Neighbor", "Naive Bayes"), lty = c(1, 1, 1), col = c(3, 4, 5))
+plot(movies.svm.rocrperf, col = 5, add = TRUE)
+plot(movies.rf.rocrperf, col = 6, add = TRUE)
+legend("bottomright", inset = 0.05, legend = c("Logistic Regression", "k-Nearest Neighbor", "Support Vector Machine", "Random Forest"), lty = c(1, 1, 1, 1), col = c(3, 4, 5, 6))
 ```
 ## AUC Calculations
 
-```{r}
+```{r, warning = FALSE}
 movies.lr.auc <- auc(movies.test$isSuccess, movies.lr.predict)
 movies.lr.auc
 movies.knn.auc <- auc(movies.test$isSuccess, movies.knn.predict)
 movies.knn.auc
-movies.nb.auc <- auc(movies.test$isSuccess, as.numeric(movies.nb.predict))
-movies.nb.auc
+movies.svm.auc <- auc(movies.test$isSuccess, movies.svm.predict)
+movies.svm.auc
+movies.rf.auc <- auc(movies.test$isSuccess, movies.rf.predict)
+movies.rf.auc
 ```
 
+## Variable Analysis
+
+```{r, warning = FALSE}
+summary(movies.lr)
+```
