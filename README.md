@@ -4,53 +4,16 @@ This project analyzes movies using various data science techniques to determine 
 
 ## Getting Started
 
-These instructions will give you a copy of the project up and running on
-your local machine for development and testing purposes. See deployment
-for notes on deploying the project on a live system.
+Follow the directions below to generate a model to predict movie success.
 
 ### Prerequisites
 
-Requirements for the software and other tools to build, test and push 
-- [Example 1](https://www.example.com)
-- [Example 2](https://www.example.com)
+In order to clone this repository, ```git lfs``` needs to be installed.  In addition, a version of R and RStudio are required.
 
 ### Installing
 
-A step by step series of examples that tell you how to get a development
-environment running
+1. Clone the repository with ```git``` and ```git lfs``` to obtain the source code
 
-Say what the step will be
+2. Open the models.Rmd file in RStudio and install the packages at the top using ```install.packages("name")```
 
-    Give the example
-
-And repeat
-
-    until finished
-
-End with an example of getting some data out of the system or using it
-for a little demo
-
-## Running the tests
-
-Explain how to run the automated tests for this system
-
-### Sample Tests
-
-Explain what these tests test and why
-
-    Give an example
-
-### Style test
-
-Checks if the best practices and the right coding style has been used.
-
-    Give an example
-
-## Authors
-
-  - **Billie Thompson** - *Provided README Template* -
-    [PurpleBooth](https://github.com/PurpleBooth)
-
-See also the list of
-[contributors](https://github.com/PurpleBooth/a-good-readme-template/contributors)
-who participated in this project.
+3. Knit the models.Rmd file to creeate your model
