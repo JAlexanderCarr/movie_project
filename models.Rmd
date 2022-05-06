@@ -181,12 +181,11 @@ fantasyF <- fantasyT[2];
 frequencies <- c(comedyF, horrorF, romanceF, actionF, thrillerF, dramaF, mysteryF, crimeF, animationF, adventureF, fantasyF);
 #colnames(frequencies) <- c("Comedy", "Horror", "Romance", "Action", "Thriller", "Drama", "Mystery", "Crime", "Animation", "Adventure", "Fantasy");
 #rownames(frequencies) <- c("Values");
-genre_barplot <- barplot(frequencies, col="#69b3a2", names.arg=c("Comedy","Horror","Romance","Action","Thriller", "Drama", "Mystery", "Crime", "Animation", "Adventure", "Fantasy"), las=2);
+genre_barplot <- barplot(frequencies, col="#69b3a2", names.arg=c("Comedy","Horror","Romance","Action","Thriller", "Drama", "Mystery", "Crime", "Animation", "Adventure", "Fantasy"), las=2, main = "Genre Frequency", ylab = "Frequency");
 genre_barplot;
 
 # runtime
-runtimeHistogram <- hist(movies$runtime, col="#a2dcf5");
-runtimeHistogram;
+runtimeHistogram <- hist(movies$runtime, col="#a2dcf5", xlab = "Runtime (minutes)", main = "Histogram of Movie Runtime");
 
 # plot of profit_percentage of collection & not collection
 series_profit <- qplot(data = movies, y = profit_percentage, x = isCollection, geom = "blank", na.rm = TRUE);
