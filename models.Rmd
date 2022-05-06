@@ -149,3 +149,55 @@ movies.rf.auc
 summary(movies.lr)
 ```
 >>>>>>> svm
+
+## Trend Visualizations
+
+```{r}
+# genre
+comedyT <- table(movies$Comedy);
+comedyF <- comedyT[2];
+sfT <- table(movies$`Science Fiction`);
+sfF <- sfT[2];
+horrorT <- table(movies$Horror);
+horrorF <- horrorT[2];
+romanceT <- table(movies$Romance);
+romanceF <- romanceT[2];
+actionT <- table(movies$Action);
+actionF <- actionT[2];
+thrillerT <- table(movies$Thriller);
+thrillerF <- thrillerT[2];
+dramaT <- table(movies$Drama);
+dramaF <- dramaT[2];
+mysteryT <- table(movies$Mystery);
+mysteryF <- mysteryT[2];
+crimeT <- table(movies$Crime);
+crimeF <- crimeT[2];
+animationT <- table(movies$Animation);
+animationF <- animationT[2];
+adventureT <- table(movies$Adventure);
+adventureF <- adventureT[2];
+fantasyT <- table(movies$Fantasy);
+fantasyF <- fantasyT[2];
+frequencies <- c(comedyF, horrorF, romanceF, actionF, thrillerF, dramaF, mysteryF, crimeF, animationF, adventureF, fantasyF);
+#colnames(frequencies) <- c("Comedy", "Horror", "Romance", "Action", "Thriller", "Drama", "Mystery", "Crime", "Animation", "Adventure", "Fantasy");
+#rownames(frequencies) <- c("Values");
+genre_barplot <- barplot(frequencies, col="#69b3a2", names.arg=c("Comedy","Horror","Romance","Action","Thriller", "Drama", "Mystery", "Crime", "Animation", "Adventure", "Fantasy"), las=2);
+genre_barplot;
+
+# runtime
+runtimeHistogram <- hist(movies$runtime, col="#a2dcf5");
+runtimeHistogram;
+
+# plot of profit_percentage of collection & not collection
+series_profit <- qplot(data = movies, y = profit_percentage, x = isCollection, geom = "blank", na.rm = TRUE);
+series_profit <- series_profit + coord_flip();
+series_profit <- series_profit + scale_x_discrete() + scale_y_continuous(limits = c(0,10));
+series_profit <- series_profit + theme_set(theme_light(base_size = 15));
+series_profit <- series_profit + theme(legend.position="none");
+series_profit <- series_profit + xlab("Collection Status") + ylab("Profit Percentage");
+#series_profit <- series_profit + aes(col = );
+#series_profit <- series_profit + geom_point(alpha = .15, size = 4);
+series_profit <- series_profit + geom_jitter(alpha = .15, size = 2, width = .2);
+series_profit;
+```
+
