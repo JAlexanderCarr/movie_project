@@ -89,35 +89,41 @@ movies.knn.predict <- predict(movies.knn, newdata = movies.test)
 movies.knn.predict.bin <- ifelse(movies.knn.predict > 0.5, 1, 0)
 confusionMatrix(as.factor(movies.knn.predict.bin), reference = as.factor(movies.test$isSuccess))
 ```
+## Naive Bayes
+
 ```{r}
-set.seed(13)
+#Randomize the data
+data_randomized <- movies[sample(nrow(movies)),]
 
 #Create 10 folds
-folds <- cut(seq(1,nrow(movies)),breaks=10,labels=FALSE)
+folds <- cut(seq(1,nrow(data_randomized)),breaks=10,labels=FALSE)
+
+movies.nb.predict <- 0
+best_accuracy <- 0
 
 #Perform 10 fold cross validation
 for(i in 1:10){
     testIndexes <- which(folds==i,arr.ind=TRUE)
-    testData <- movies[testIndexes, ]
-    trainData <- movies[-testIndexes, ]
+    testData <- data_randomized[testIndexes, ]
+    trainData <- data_randomized[-testIndexes, ]
     classifier <- naiveBayes(isSuccess ~ budget + revenue + popularity + runtime + isEN + isCollection + Comedy + `Science Fiction` + Horror + Romance + Action + Thriller + Drama + Mystery + Crime + Animation + Adventure + Fantasy, data = trainData)
     y_pred <- predict(classifier, newdata = testData)
-    matrix <- table(testData$Class, y_pred)
+    matrix <- table(testData$isSuccess, y_pred)
+    precision <- matrix[1]/ sum(matrix[1], matrix[3])
+    recall <- matrix[1]/ sum(matrix[1], matrix[2])
+    accuracy <- sum(matrix[1], matrix[4]) / sum(matrix)
+    if(accuracy > best_accuracy){
+      best_accuracy <- accuracy
+      best_precision <- precision
+      best_recall <- recall
+      best_matrix <- matrix
+      movies.nb.predict <- y_pred
+    }
 }
-```
-
-## Naive Bayes
-
-```{r}
-# Training and testing a naive bayes model on the movie dataset
-movies.nb.x <- movies.train[c('budget', 'revenue', 'popularity', 'runtime', 'isEN', 'isCollection', 'Comedy', 'Science Fiction', 'Horror', 'Romance', 'Action', 'Thriller', 'Drama', 'Mystery', 'Crime', 'Animation', 'Adventure', 'Fantasy')]
-movies.nb.y <- as.factor(movies.train$isSuccess)
-Grid = expand.grid(usekernel=TRUE,adjust=1,fL=c(0.2,0.5,0.8))
-movies.nb <- train(movies.nb.x, movies.nb.y, method = "nb", trControl = movies.ctrl, usekernal=TRUE
-)
-movies.nb.predict <- predict(movies.nb, newdata = movies.test)
-movies.nb.predict.bin <- ifelse(movies.nb.predict > 0.5, 1, 0)
-confusionMatrix(as.factor(movies.nb.predict.bin), reference = as.factor(movies.test$isSuccess))
+print(best_matrix)
+print(best_accuracy)
+print(best_recall)
+print(best_precision)
 ```
 
 ## ROC Plot
@@ -128,11 +134,14 @@ movies.lr.rocrpred <- prediction(movies.lr.predict, movies.test$isSuccess)
 movies.lr.rocrperf <- performance(movies.lr.rocrpred, "tpr", "fpr")
 movies.knn.rocrpred <- prediction(movies.knn.predict, movies.test$isSuccess)
 movies.knn.rocrperf <- performance(movies.knn.rocrpred, "tpr", "fpr")
+movies.nb.rocrpred <- prediction(as.numeric(movies.nb.predict), movies.test$isSuccess)
+movies.nb.rocrperf <- performance(movies.nb.rocrpred, "tpr", "fpr")
 
 # Plotting the ROC curves
 plot(movies.lr.rocrperf, col = 3, text.adj = c(-0.2, 1.7), main = "ROC Curve")
 plot(movies.knn.rocrperf, col = 4, add = TRUE)
-legend("bottomright", inset = 0.05, legend = c("Logistic Regression", "k-Nearest Neighbor"), lty = c(1, 1), col = c(3, 4))
+plot(movies.nb.rocrperf, col = 5, add = TRUE)
+legend("bottomright", inset = 0.05, legend = c("Logistic Regression", "k-Nearest Neighbor", "Naive Bayes"), lty = c(1, 1, 1), col = c(3, 4, 5))
 ```
 ## AUC Calculations
 
@@ -141,6 +150,7 @@ movies.lr.auc <- auc(movies.test$isSuccess, movies.lr.predict)
 movies.lr.auc
 movies.knn.auc <- auc(movies.test$isSuccess, movies.knn.predict)
 movies.knn.auc
-#movies.nb.auc(movies.test$isSuccess, predicted)
+movies.nb.auc <- auc(movies.test$isSuccess, as.numeric(movies.nb.predict))
+movies.nb.auc
 ```
 
