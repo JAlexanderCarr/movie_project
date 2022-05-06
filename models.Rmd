@@ -106,12 +106,13 @@ for(i in 1:10){
     testIndexes <- which(folds==i,arr.ind=TRUE)
     testData <- data_randomized[testIndexes, ]
     trainData <- data_randomized[-testIndexes, ]
-    classifier <- naiveBayes(isSuccess ~ budget + revenue + popularity + runtime + isEN + isCollection + Comedy + `Science Fiction` + Horror + Romance + Action + Thriller + Drama + Mystery + Crime + Animation + Adventure + Fantasy, data = trainData)
-    y_pred <- predict(classifier, newdata = testData)
+    classifier <- naiveBayes(isSuccess ~ budget + popularity + runtime + isEN + isCollection + Comedy + `Science Fiction` + Horror + Romance + Action + Thriller + Drama + Mystery + Crime + Animation + Adventure + Fantasy, data = trainData)
+    movies.nb.predict <- predict(classifier, newdata = testData)
     matrix <- table(testData$isSuccess, y_pred)
     precision <- matrix[1]/ sum(matrix[1], matrix[3])
     recall <- matrix[1]/ sum(matrix[1], matrix[2])
     accuracy <- sum(matrix[1], matrix[4]) / sum(matrix)
+    print(accuracy)
     if(accuracy > best_accuracy){
       best_accuracy <- accuracy
       best_precision <- precision
@@ -125,7 +126,16 @@ print(best_accuracy)
 print(best_recall)
 print(best_precision)
 ```
-
+##Naive Bayes 2
+```{r}
+# movies.nb.x <- movies.train[c('budget', 'revenue', 'popularity', 'runtime', 'isEN', 'isCollection', 'Comedy', 'Science Fiction', 'Horror', 'Romance', 'Action', 'Thriller', 'Drama', 'Mystery', 'Crime', 'Animation', 'Adventure', 'Fantasy')]
+# movies.nb.y <- as.factor(movies.train$isSuccess)
+# movies.nb.test <- movies.test[c('isSuccess','budget', 'popularity', 'runtime', 'isEN', 'isCollection', 'Comedy', 'Science Fiction', 'Horror', 'Romance', 'Action', 'Thriller', 'Drama', 'Mystery', 'Crime', 'Animation', 'Adventure', 'Fantasy')]
+# movies.nb <- train(movies.nb.x, movies.nb.y, method = "nb", trControl = movies.ctrl)
+# movies.nb.predict <- predict(movies.nb, newdata = movies.nb.test)
+# movies.nb.predict.bin <- ifelse(movies.nb.predict > 0.5, 1, 0)
+# confusionMatrix(as.factor(movies.nb.predict.bin), reference = as.factor(movies.nb.test$isSuccess))
+```
 ## ROC Plot
 
 ```{r}
